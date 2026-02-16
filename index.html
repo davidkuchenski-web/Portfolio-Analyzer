@@ -5,521 +5,473 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portfolio Rebalancing Analyzer</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   ::selection { background: rgba(118, 185, 0, 0.3); }
   body {
     min-height: 100vh;
-    background: #0D1117;
+    background: #0B0E14;
     color: #E2E8F0;
-    font-family: 'Söhne', 'Helvetica Neue', -apple-system, sans-serif;
-    padding: 32px 24px;
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    padding: 28px 20px;
     line-height: 1.5;
   }
   .mono { font-family: 'JetBrains Mono', monospace; }
-  .container { max-width: 1000px; margin: 0 auto; }
+  .container { max-width: 1100px; margin: 0 auto; }
   .label-sm {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
-    color: #718096; font-weight: 600; margin-bottom: 10px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: #4A5568; font-weight: 700; margin-bottom: 10px;
   }
-
-/* Slider styling */
-input[type=“range”] {
--webkit-appearance: none; appearance: none;
-width: 100%; height: 6px;
-background: rgba(255,255,255,0.08); border-radius: 4px; outline: none;
-cursor: pointer;
-}
-input[type=“range”]::-webkit-slider-thumb {
--webkit-appearance: none; width: 16px; height: 16px;
-border-radius: 50%; background: var(–thumb-color, #76B900);
-cursor: pointer; border: 2px solid rgba(255,255,255,0.2);
-}
-input[type=“range”]::-moz-range-thumb {
-width: 16px; height: 16px; border-radius: 50%;
-background: var(–thumb-color, #76B900); cursor: pointer;
-border: 2px solid rgba(255,255,255,0.2);
-}
-
-.btn {
-padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);
-background: rgba(255,255,255,0.03); color: #A0AEC0; font-size: 12px;
-font-weight: 500; cursor: pointer; transition: all 0.2s ease;
-}
-.btn.active { border-color: rgba(118, 185, 0, 0.5); background: rgba(118, 185, 0, 0.12); color: #76B900; }
-.btn:hover { background: rgba(255,255,255,0.06); }
-
-.btn-scenario {
-padding: 10px 24px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);
-background: rgba(255,255,255,0.02); color: #718096; font-size: 14px;
-font-weight: 600; cursor: pointer; flex: 1; transition: all 0.2s ease; text-align: center;
-}
-
-.view-toggle {
-display: flex; gap: 2px; margin-bottom: 24px;
-background: rgba(255,255,255,0.04); border-radius: 10px; padding: 3px; width: fit-content;
-}
-.view-toggle button {
-padding: 8px 20px; border-radius: 8px; border: none;
-background: transparent; color: #718096; font-size: 13px;
-font-weight: 600; cursor: pointer; transition: all 0.2s ease;
-}
-.view-toggle button.active { background: rgba(255,255,255,0.1); color: #F7FAFC; }
-
-.card {
-background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
-border-radius: 12px; padding: 20px;
-}
-.card.highlight { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
-
-.grid-main { display: grid; grid-template-columns: 320px 1fr; gap: 24px; }
-@media (max-width: 768px) { .grid-main { grid-template-columns: 1fr; } }
-
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { padding: 8px 10px; color: #718096; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.1); }
-td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.04); }
-.text-right { text-align: right; }
-.text-left { text-align: left; }
-.text-center { text-align: center; }
-
-.minibar { display: flex; border-radius: 5px; overflow: hidden; width: 100%; }
-.minibar div { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-
-.save-input {
-flex: 1; padding: 8px 12px; border-radius: 8px;
-border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);
-color: #E2E8F0; font-size: 13px; outline: none;
-}
-.save-input:focus { border-color: rgba(118, 185, 0, 0.4); }
-.save-btn {
-padding: 8px 16px; border-radius: 8px; border: none;
-background: #76B900; color: #0D1117; font-size: 13px;
-font-weight: 700; cursor: pointer; transition: opacity 0.2s;
-}
-.save-btn:hover { opacity: 0.85; }
-
-.total-bar {
-display: flex; justify-content: space-between; align-items: center;
-padding: 8px 12px; border-radius: 8px; margin-top: 8px;
-}
-.total-bar.valid { background: rgba(72, 187, 120, 0.1); border: 1px solid rgba(72, 187, 120, 0.3); }
-.total-bar.invalid { background: rgba(245, 101, 101, 0.15); border: 1px solid rgba(245, 101, 101, 0.4); }
-
-.disclaimer {
-margin-top: 32px; padding: 16px 20px;
-background: rgba(236, 201, 75, 0.06); border-radius: 10px;
-border: 1px solid rgba(236, 201, 75, 0.15);
-font-size: 12px; color: #A0AEC0; line-height: 1.6;
-}
-
-.risk-row { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
-.risk-label { width: 130px; font-size: 13px; color: #CBD5E0; font-weight: 500; flex-shrink: 0; }
-.risk-bar-bg { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
-.risk-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
-
-.compare-grid { display: grid; gap: 0; font-size: 13px; }
-.compare-cell { padding: 14px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-.compare-header { padding: 10px 12px; text-align: center; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
-
-.scenario-chip {
-display: inline-flex; align-items: center; gap: 8px;
-padding: 6px 14px; border-radius: 8px;
-background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); font-size: 13px;
-}
-.chip-remove { background: none; border: none; color: #718096; cursor: pointer; font-size: 16px; line-height: 1; padding: 0; }
-.chip-remove:hover { color: #F56565; }
-
-.green { color: #48BB78; } .red { color: #F56565; } .yellow { color: #ECC94B; } .white { color: #F7FAFC; } .muted { color: #A0AEC0; } .dim { color: #CBD5E0; }
-.fw700 { font-weight: 700; } .fw600 { font-weight: 600; }
-.hidden { display: none; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 5px;
+    background: rgba(255,255,255,0.06); border-radius: 3px; outline: none; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--thumb-color, #76B900);
+    cursor: pointer; border: 2px solid rgba(0,0,0,0.3);
+    box-shadow: 0 0 6px var(--thumb-color, #76B900);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--thumb-color, #76B900); cursor: pointer;
+    border: 2px solid rgba(0,0,0,0.3);
+  }
+  .btn {
+    padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.03); color: #718096; font-size: 11px;
+    font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'DM Sans', sans-serif;
+  }
+  .btn.active { border-color: rgba(118, 185, 0, 0.5); background: rgba(118, 185, 0, 0.1); color: #76B900; }
+  .btn:hover { background: rgba(255,255,255,0.06); }
+  .btn-scenario {
+    padding: 9px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.02); color: #4A5568; font-size: 13px;
+    font-weight: 600; cursor: pointer; flex: 1; transition: all 0.2s ease; text-align: center;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .view-toggle {
+    display: flex; gap: 2px; margin-bottom: 24px;
+    background: rgba(255,255,255,0.03); border-radius: 10px; padding: 3px; width: fit-content;
+  }
+  .view-toggle button {
+    padding: 7px 18px; border-radius: 8px; border: none;
+    background: transparent; color: #4A5568; font-size: 12px;
+    font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'DM Sans', sans-serif;
+  }
+  .view-toggle button.active { background: rgba(255,255,255,0.08); color: #F7FAFC; }
+  .card {
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px; padding: 18px;
+  }
+  .card.highlight { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+  .grid-main { display: grid; grid-template-columns: 340px 1fr; gap: 20px; }
+  @media (max-width: 800px) { .grid-main { grid-template-columns: 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { padding: 7px 8px; color: #4A5568; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .text-right { text-align: right; } .text-left { text-align: left; } .text-center { text-align: center; }
+  .minibar { display: flex; border-radius: 4px; overflow: hidden; width: 100%; }
+  .minibar div { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); min-width: 0; }
+  .save-input {
+    flex: 1; padding: 7px 12px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+    color: #E2E8F0; font-size: 12px; outline: none; font-family: 'DM Sans', sans-serif;
+  }
+  .save-input:focus { border-color: rgba(118, 185, 0, 0.3); }
+  .save-btn {
+    padding: 7px 14px; border-radius: 8px; border: none;
+    background: #76B900; color: #0B0E14; font-size: 12px;
+    font-weight: 700; cursor: pointer; transition: opacity 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .save-btn:hover { opacity: 0.85; }
+  .total-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 12px; border-radius: 8px; margin-top: 8px;
+  }
+  .total-bar.valid { background: rgba(72, 187, 120, 0.08); border: 1px solid rgba(72, 187, 120, 0.2); }
+  .total-bar.invalid { background: rgba(245, 101, 101, 0.1); border: 1px solid rgba(245, 101, 101, 0.3); }
+  .disclaimer {
+    margin-top: 28px; padding: 14px 18px;
+    background: rgba(236, 201, 75, 0.04); border-radius: 10px;
+    border: 1px solid rgba(236, 201, 75, 0.1);
+    font-size: 11px; color: #718096; line-height: 1.6;
+  }
+  .risk-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .risk-label { width: 120px; font-size: 12px; color: #A0AEC0; font-weight: 500; flex-shrink: 0; }
+  .risk-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+  .risk-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+  .compare-grid { display: grid; gap: 0; font-size: 12px; }
+  .compare-cell { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .compare-header { padding: 8px 10px; text-align: center; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .scenario-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 12px; border-radius: 8px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); font-size: 12px;
+  }
+  .chip-remove { background: none; border: none; color: #4A5568; cursor: pointer; font-size: 15px; line-height: 1; padding: 0; }
+  .chip-remove:hover { color: #F56565; }
+  .green { color: #48BB78; } .red { color: #F56565; } .yellow { color: #ECC94B; } .white { color: #F7FAFC; } .muted { color: #718096; } .dim { color: #A0AEC0; }
+  .fw700 { font-weight: 700; } .fw600 { font-weight: 600; }
+  .hidden { display: none; }
+  .stock-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+  .stock-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);
+    transition: all 0.2s ease; font-size: 11px; user-select: none;
+  }
+  .stock-chip:hover { background: rgba(255,255,255,0.05); }
+  .stock-chip.active { border-color: var(--chip-color); background: color-mix(in srgb, var(--chip-color) 8%, transparent); }
+  .stock-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .stock-chip-ticker { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11px; }
+  .stock-chip-cat { font-size: 9px; padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.04); color: #4A5568; font-weight: 600; margin-left: auto; flex-shrink: 0; }
+  .sliders-scroll { max-height: 380px; overflow-y: auto; padding-right: 4px; }
+  .sliders-scroll::-webkit-scrollbar { width: 4px; }
+  .sliders-scroll::-webkit-scrollbar-track { background: transparent; }
+  .sliders-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+  .section-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 14px 0; }
+  .tab-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; padding: 6px 0;
+  }
+  .chevron { color: #4A5568; font-size: 12px; transition: transform 0.2s; }
+  .chevron.open { transform: rotate(180deg); }
 </style>
-
 </head>
 <body>
 <div class="container">
-
-  <!-- Header -->
-
-  <div style="margin-bottom: 32px;">
+  <div style="margin-bottom: 28px;">
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-      <div style="width: 10px; height: 10px; border-radius: 2px; background: #76B900;"></div>
+      <div style="width: 8px; height: 8px; border-radius: 2px; background: #76B900;"></div>
       <span class="label-sm" style="margin-bottom: 0;">Portfolio Rebalancing Analyzer</span>
     </div>
-    <h1 style="font-size: 28px; font-weight: 700; color: #F7FAFC; line-height: 1.2;">6-Month Scenario Modeler</h1>
-    <p style="font-size: 14px; color: #718096; margin-top: 6px;">
-      Starting value: <span class="mono muted" id="total-display"></span> · Adjust allocations and compare scenarios across bear/base/bull cases.
+    <h1 style="font-size: 26px; font-weight: 700; color: #F7FAFC; line-height: 1.2;">6-Month Scenario Modeler</h1>
+    <p style="font-size: 13px; color: #4A5568; margin-top: 6px;">
+      Starting value: <span class="mono dim" id="total-display"></span> · Add stocks, adjust allocations, compare bear/base/bull outcomes.
     </p>
   </div>
-
-  <!-- View Toggle -->
-
   <div class="view-toggle">
     <button class="active" onclick="switchView('single')" id="tab-single">Scenario Builder</button>
     <button onclick="switchView('compare')" id="tab-compare">Compare All</button>
   </div>
-
-  <!-- SINGLE VIEW -->
-
   <div id="view-single">
     <div class="grid-main">
-      <!-- Left: Controls -->
       <div>
-        <div style="margin-bottom: 20px;">
-          <div class="label-sm">Presets</div>
-          <div style="display: flex; flex-wrap: wrap; gap: 6px;" id="preset-buttons"></div>
+        <div style="margin-bottom:12px">
+          <div class="tab-section-header" onclick="toggleSection('stocks')">
+            <div class="label-sm" style="margin-bottom:0">Add AI Stocks</div>
+            <span class="chevron open" id="chevron-stocks">&#9662;</span>
+          </div>
+          <div id="section-stocks">
+            <div style="margin-bottom:8px;font-size:10px;color:#4A5568;">Click to add/remove. Current holdings pre-selected.</div>
+            <div class="stock-grid" id="stock-picker"></div>
+          </div>
         </div>
-
-```
-    <div style="margin-bottom: 20px;">
-      <div class="label-sm" style="margin-bottom: 12px;">Allocation</div>
-      <div id="sliders-container"></div>
-      <div class="total-bar valid" id="total-bar">
-        <span style="font-size: 12px;" id="total-label">Total</span>
-        <span class="mono fw700" style="font-size: 13px;" id="total-value">100.0%</span>
+        <div class="section-divider"></div>
+        <div style="margin-bottom: 14px;">
+          <div class="label-sm">Presets</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 5px;" id="preset-buttons"></div>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <div class="label-sm" style="margin-bottom: 10px;">Allocation</div>
+          <div class="sliders-scroll" id="sliders-container"></div>
+          <div class="total-bar valid" id="total-bar">
+            <span style="font-size: 11px;" id="total-label">Total</span>
+            <span class="mono fw700" style="font-size: 12px;" id="total-value">100.0%</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:14px;">
+          <button class="btn" onclick="equalizeAllocations()" style="flex:1;font-size:11px;">Equalize</button>
+          <button class="btn" onclick="resetToCurrentAlloc()" style="flex:1;font-size:11px;">Reset</button>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <input type="text" class="save-input" placeholder="Scenario name..." id="scenario-name-input">
+          <button class="save-btn" onclick="saveScenario()">Save</button>
+        </div>
+      </div>
+      <div>
+        <div style="display: flex; gap: 6px; margin-bottom: 14px;" id="scenario-toggle"></div>
+        <div class="card highlight" id="summary-card"></div>
+        <div class="card" style="margin-top: 16px; padding: 14px;">
+          <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th class="text-left">Stock</th><th class="text-right">Weight</th>
+              <th class="text-right">Invested</th><th class="text-right">Return</th>
+              <th class="text-right">End Value</th><th class="text-right">P&L</th>
+            </tr></thead>
+            <tbody id="results-tbody"></tbody>
+          </table>
+          </div>
+        </div>
+        <div class="card" style="margin-top: 14px; padding: 12px 14px;">
+          <div class="label-sm" style="margin-bottom: 8px;">6-Month Return Assumptions</div>
+          <div id="assumptions-grid" style="display:grid; gap:6px;"></div>
+        </div>
       </div>
     </div>
-
-    <div style="display: flex; gap: 8px;">
-      <input type="text" class="save-input" placeholder="Scenario name..." id="scenario-name-input">
-      <button class="save-btn" onclick="saveScenario()">Save</button>
-    </div>
   </div>
-
-  <!-- Right: Results -->
-  <div>
-    <div style="display: flex; gap: 8px; margin-bottom: 16px;" id="scenario-toggle"></div>
-
-    <!-- Summary Card -->
-    <div class="card highlight" id="summary-card"></div>
-
-    <!-- Detail Table -->
-    <div class="card" style="margin-top: 20px; padding: 16px;">
-      <table>
-        <thead>
-          <tr>
-            <th class="text-left">Stock</th>
-            <th class="text-right">Weight</th>
-            <th class="text-right">Invested</th>
-            <th class="text-right">Return</th>
-            <th class="text-right">End Value</th>
-            <th class="text-right">P&L</th>
-          </tr>
-        </thead>
-        <tbody id="results-tbody"></tbody>
-      </table>
-    </div>
-
-    <!-- Return Assumptions -->
-    <div class="card" style="margin-top: 16px; padding: 12px 16px;">
-      <div class="label-sm" style="margin-bottom: 8px;">6-Month Return Assumptions</div>
-      <div id="assumptions-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>
-    </div>
-  </div>
-</div>
-```
-
-  </div>
-
-  <!-- COMPARE VIEW -->
-
   <div id="view-compare" class="hidden">
     <div style="margin-bottom: 16px;">
-      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;" id="saved-chips"></div>
-      <p style="font-size: 12px; color: #718096;">Save scenarios from the Builder tab to compare them here.</p>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;" id="saved-chips"></div>
+      <p style="font-size: 11px; color: #4A5568;">Save scenarios from the Builder tab to compare them here.</p>
     </div>
-
-```
-<div class="card" style="margin-bottom: 24px; padding: 20px;">
-  <div class="label-sm" style="margin-bottom: 16px;">Projected 6-Month Outcomes</div>
-  <div id="comparison-grid"></div>
-</div>
-
-<div class="card" style="padding: 20px;">
-  <div class="label-sm" style="margin-bottom: 16px;">Risk Profile</div>
-  <div id="risk-bars"></div>
-</div>
-```
-
+    <div class="card" style="margin-bottom: 20px; padding: 18px;">
+      <div class="label-sm" style="margin-bottom: 14px;">Projected 6-Month Outcomes</div>
+      <div style="overflow-x:auto;" id="comparison-grid"></div>
+    </div>
+    <div class="card" style="padding: 18px;">
+      <div class="label-sm" style="margin-bottom: 14px;">Risk Profile</div>
+      <div id="risk-bars"></div>
+    </div>
   </div>
-
-  <!-- Disclaimer -->
-
   <div class="disclaimer">
-    <span class="yellow fw700">Disclaimer:</span> This tool uses simplified return/volatility estimates and does not account for correlations between assets, dividends, taxes, transaction costs, or real-world portfolio dynamics. These are illustrative scenarios, not predictions. Not financial advice — consult a qualified financial advisor before making investment decisions.
+    <span class="yellow fw700">Disclaimer:</span> Return assumptions are illustrative estimates based on analyst consensus and historical volatility as of Feb 2026. Does not account for correlations, dividends, taxes, transaction costs, or real-world dynamics. Not financial advice — consult a qualified financial advisor.
   </div>
-
 </div>
-
 <script>
-const STOCKS = ["NVDA", "MSFT", "CRWV", "GOOG", "SNOW"];
-const CURRENT_PORTFOLIO = { NVDA: 621554, MSFT: 140462, CRWV: 94119, GOOG: 61204, SNOW: 36458 };
-const TOTAL = Object.values(CURRENT_PORTFOLIO).reduce((a, b) => a + b, 0);
-
-const RETURN_ASSUMPTIONS = {
-  NVDA: { bear: -0.20, base: 0.12, bull: 0.35, vol: 0.45 },
-  MSFT: { bear: -0.10, base: 0.08, bull: 0.20, vol: 0.25 },
-  CRWV: { bear: -0.35, base: 0.18, bull: 0.55, vol: 0.65 },
-  GOOG: { bear: -0.12, base: 0.10, bull: 0.22, vol: 0.28 },
-  SNOW: { bear: -0.18, base: 0.14, bull: 0.30, vol: 0.38 },
+const ALL_STOCKS = {
+  NVDA:  { name:"NVIDIA",        cat:"GPU/AI Chips",    color:"#76B900", bear:-0.20, base:0.12, bull:0.35, vol:0.45, owned:true },
+  MSFT:  { name:"Microsoft",     cat:"Cloud/AI",        color:"#00A4EF", bear:-0.10, base:0.08, bull:0.20, vol:0.25, owned:true },
+  CRWV:  { name:"CoreWeave",     cat:"AI Infra",        color:"#FF6B35", bear:-0.35, base:0.18, bull:0.55, vol:0.65, owned:true },
+  GOOG:  { name:"Alphabet",      cat:"Cloud/AI",        color:"#4285F4", bear:-0.12, base:0.10, bull:0.22, vol:0.28, owned:true },
+  SNOW:  { name:"Snowflake",     cat:"Data/AI",         color:"#29B5E8", bear:-0.18, base:0.14, bull:0.30, vol:0.38, owned:true },
+  AMD:   { name:"AMD",           cat:"GPU/AI Chips",    color:"#ED1C24", bear:-0.22, base:0.15, bull:0.40, vol:0.50, owned:false },
+  AVGO:  { name:"Broadcom",      cat:"Custom AI Chips", color:"#CC092F", bear:-0.15, base:0.14, bull:0.32, vol:0.38, owned:false },
+  PLTR:  { name:"Palantir",      cat:"AI Software",     color:"#B8B8B8", bear:-0.30, base:0.15, bull:0.50, vol:0.60, owned:false },
+  META:  { name:"Meta",          cat:"AI/Social",       color:"#0668E1", bear:-0.12, base:0.12, bull:0.28, vol:0.32, owned:false },
+  AMZN:  { name:"Amazon",        cat:"Cloud/AI",        color:"#FF9900", bear:-0.10, base:0.10, bull:0.22, vol:0.28, owned:false },
+  TSM:   { name:"TSMC",          cat:"AI Foundry",      color:"#E30613", bear:-0.15, base:0.16, bull:0.35, vol:0.40, owned:false },
+  ARM:   { name:"Arm Holdings",  cat:"Chip Design",     color:"#0091BD", bear:-0.25, base:0.12, bull:0.40, vol:0.52, owned:false },
+  SMCI:  { name:"Super Micro",   cat:"AI Servers",      color:"#00843D", bear:-0.35, base:0.20, bull:0.60, vol:0.70, owned:false },
+  MRVL:  { name:"Marvell",       cat:"AI Networking",   color:"#AF1F23", bear:-0.20, base:0.14, bull:0.38, vol:0.45, owned:false },
+  ORCL:  { name:"Oracle",        cat:"Cloud/AI",        color:"#F80000", bear:-0.12, base:0.10, bull:0.25, vol:0.30, owned:false },
+  CRM:   { name:"Salesforce",    cat:"AI Software",     color:"#00A1E0", bear:-0.14, base:0.10, bull:0.24, vol:0.32, owned:false },
+  MU:    { name:"Micron",        cat:"AI Memory",       color:"#0033A1", bear:-0.25, base:0.18, bull:0.45, vol:0.55, owned:false },
+  PANW:  { name:"Palo Alto",     cat:"AI Security",     color:"#FA582D", bear:-0.15, base:0.12, bull:0.28, vol:0.35, owned:false },
+  NBIS:  { name:"Nebius",        cat:"AI Infra",        color:"#5B2D8E", bear:-0.40, base:0.22, bull:0.65, vol:0.75, owned:false },
 };
-
-const COLORS = { NVDA: "#76B900", MSFT: "#00A4EF", CRWV: "#FF6B35", GOOG: "#4285F4", SNOW: "#29B5E8" };
-const SCENARIO_COLORS = { bear: "#F56565", base: "#ECC94B", bull: "#48BB78" };
-const SCENARIO_LABELS = { bear: "Bear", base: "Base", bull: "Bull" };
-
+const CURRENT_PORTFOLIO = { NVDA:621554, MSFT:140462, CRWV:94119, GOOG:61204, SNOW:36458 };
+const TOTAL = Object.values(CURRENT_PORTFOLIO).reduce((a,b)=>a+b,0);
+const OWNED_STOCKS = ["NVDA","MSFT","CRWV","GOOG","SNOW"];
+const CURRENT_ALLOC = {};
+OWNED_STOCKS.forEach(s=>{ CURRENT_ALLOC[s]=parseFloat(((CURRENT_PORTFOLIO[s]/TOTAL)*100).toFixed(1)); });
 const PRESETS = {
-  current: { label: "Current (As-Is)", alloc: { NVDA: 65.1, MSFT: 14.7, CRWV: 9.9, GOOG: 6.4, SNOW: 3.8 } },
-  balanced_ai: { label: "Balanced AI", alloc: { NVDA: 35, MSFT: 25, CRWV: 15, GOOG: 15, SNOW: 10 } },
-  aggressive: { label: "Growth Tilt", alloc: { NVDA: 45, MSFT: 10, CRWV: 25, GOOG: 10, SNOW: 10 } },
-  conservative: { label: "Blue Chip Heavy", alloc: { NVDA: 25, MSFT: 30, CRWV: 10, GOOG: 30, SNOW: 5 } },
+  current:     { label:"Current",      alloc:{...CURRENT_ALLOC} },
+  balanced_ai: { label:"Balanced AI",  alloc:{NVDA:30,MSFT:20,CRWV:10,GOOG:10,SNOW:5,AVGO:10,AMD:5,META:5,TSM:5} },
+  aggressive:  { label:"High Growth",  alloc:{NVDA:25,CRWV:15,SMCI:10,PLTR:10,AMD:10,MU:10,NBIS:5,ARM:5,MRVL:5,SNOW:5} },
+  mega_cap:    { label:"Mega-Cap AI",  alloc:{NVDA:25,MSFT:20,GOOG:15,META:15,AMZN:15,AVGO:10} },
 };
-
-// State
-let alloc = { ...PRESETS.current.alloc };
-let activePreset = "current";
-let scenarioType = "base";
-let currentView = "single";
-let savedScenarios = [{ label: "Current", alloc: { ...PRESETS.current.alloc } }];
-
-// Helpers
-const fmt = n => "$" + Math.round(n).toLocaleString();
-const fmtPct = n => (n >= 0 ? "+" : "") + (n * 100).toFixed(1) + "%";
-const fmtDelta = n => (n >= 0 ? "+" : "-") + "$" + Math.round(Math.abs(n)).toLocaleString();
-
-function computeScenario(a, sc) {
-  let totalValue = 0, portfolioVol = 0;
-  const details = {};
-  STOCKS.forEach(s => {
-    const w = a[s] / 100;
-    const invested = TOTAL * w;
-    const ret = RETURN_ASSUMPTIONS[s][sc];
-    const endValue = invested * (1 + ret);
-    details[s] = { invested, endValue, ret, weight: w };
-    totalValue += endValue;
-    portfolioVol += Math.pow(w * RETURN_ASSUMPTIONS[s].vol, 2);
+const SCENARIO_COLORS={bear:"#F56565",base:"#ECC94B",bull:"#48BB78"};
+const SCENARIO_LABELS={bear:"Bear",base:"Base",bull:"Bull"};
+let activeStocks=[...OWNED_STOCKS];
+let alloc={...CURRENT_ALLOC};
+let activePreset="current";
+let scenarioType="base";
+let currentView="single";
+let savedScenarios=[{label:"Current",alloc:{...CURRENT_ALLOC},stocks:[...OWNED_STOCKS]}];
+let sectionsOpen={stocks:true};
+const fmt=n=>"$"+Math.round(n).toLocaleString();
+const fmtPct=n=>(n>=0?"+":"")+(n*100).toFixed(1)+"%";
+const fmtDelta=n=>(n>=0?"+":"-")+"$"+Math.round(Math.abs(n)).toLocaleString();
+function computeScenario(a,stocks,sc){
+  let totalValue=0,portfolioVol=0; const details={};
+  stocks.forEach(s=>{
+    const w=(a[s]||0)/100; const invested=TOTAL*w;
+    const ret=ALL_STOCKS[s][sc]; const endValue=invested*(1+ret);
+    details[s]={invested,endValue,ret,weight:w};
+    totalValue+=endValue; portfolioVol+=Math.pow(w*ALL_STOCKS[s].vol,2);
   });
-  portfolioVol = Math.sqrt(portfolioVol);
-  const gain = totalValue - TOTAL;
-  return { totalValue, gain, pctReturn: gain / TOTAL, portfolioVol, details };
+  portfolioVol=Math.sqrt(portfolioVol);
+  const gain=totalValue-TOTAL;
+  return {totalValue,gain,pctReturn:gain/TOTAL,portfolioVol,details};
 }
-
-function miniBarHTML(a, h = 6) {
-  return `<div class="minibar" style="height:${h}px">${STOCKS.map(s => `<div style="width:${a[s]}%;background:${COLORS[s]}"></div>`).join("")}</div>`;
+function miniBarHTML(a,stocks,h=5){
+  return '<div class="minibar" style="height:'+h+'px">'+stocks.map(s=>
+    '<div style="width:'+(a[s]||0)+'%;background:'+ALL_STOCKS[s].color+'"></div>'
+  ).join("")+'</div>';
 }
-
-// Render functions
-function renderPresets() {
-  const el = document.getElementById("preset-buttons");
-  el.innerHTML = Object.entries(PRESETS).map(([key, val]) =>
-    `<button class="btn ${activePreset === key ? 'active' : ''}" onclick="applyPreset('${key}')">${val.label}</button>`
-  ).join("");
-}
-
-function renderSliders() {
-  const el = document.getElementById("sliders-container");
-  el.innerHTML = STOCKS.map(s => `
-    <div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span class="mono fw600" style="font-size:13px;color:${COLORS[s]}">${s}</span>
-        <span class="mono" style="font-size:13px;color:#A0AEC0" id="slider-val-${s}">${alloc[s].toFixed(1)}%</span>
-      </div>
-      <input type="range" min="0" max="100" step="0.5" value="${alloc[s]}"
-        style="--thumb-color:${COLORS[s]};accent-color:${COLORS[s]}"
-        oninput="updateAlloc('${s}', this.value)">
-    </div>
-  `).join("");
-  updateTotalBar();
-}
-
-function updateTotalBar() {
-  const total = STOCKS.reduce((sum, s) => sum + alloc[s], 0);
-  const isValid = Math.abs(total - 100) < 0.5;
-  const bar = document.getElementById("total-bar");
-  bar.className = `total-bar ${isValid ? 'valid' : 'invalid'}`;
-  const color = isValid ? "#48BB78" : "#F56565";
-  document.getElementById("total-label").style.color = color;
-  document.getElementById("total-value").style.color = color;
-  document.getElementById("total-value").textContent = total.toFixed(1) + "%";
-}
-
-function renderScenarioToggle() {
-  const el = document.getElementById("scenario-toggle");
-  el.innerHTML = ["bear", "base", "bull"].map(s => {
-    const active = scenarioType === s;
-    const c = SCENARIO_COLORS[s];
-    return `<button class="btn-scenario" style="
-      border-color:${active ? c : 'rgba(255,255,255,0.08)'};
-      background:${active ? c + '15' : 'rgba(255,255,255,0.02)'};
-      color:${active ? c : '#718096'};
-    " onclick="setScenario('${s}')">${SCENARIO_LABELS[s]}</button>`;
+function getAllocTotal(){ return activeStocks.reduce((sum,s)=>sum+(alloc[s]||0),0); }
+function renderStockPicker(){
+  const el=document.getElementById("stock-picker");
+  const sorted=Object.keys(ALL_STOCKS).sort((a,b)=>{
+    const ao=ALL_STOCKS[a].owned?0:1, bo=ALL_STOCKS[b].owned?0:1;
+    if(ao!==bo) return ao-bo; return a.localeCompare(b);
+  });
+  el.innerHTML=sorted.map(t=>{
+    const s=ALL_STOCKS[t]; const isActive=activeStocks.includes(t);
+    return '<div class="stock-chip '+(isActive?'active':'')+'" style="--chip-color:'+s.color+'" onclick="toggleStock(\''+t+'\')">'+
+      '<div class="stock-dot" style="background:'+(isActive?s.color:'rgba(255,255,255,0.1)')+'"></div>'+
+      '<span class="stock-chip-ticker" style="color:'+(isActive?s.color:'#4A5568')+'">'+t+'</span>'+
+      '<span class="stock-chip-cat">'+s.cat+'</span></div>';
   }).join("");
 }
-
-function renderSummaryCard() {
-  const r = computeScenario(alloc, scenarioType);
-  const pos = r.gain >= 0;
-  document.getElementById("summary-card").innerHTML = `
-    <div style="margin-bottom:12px">${miniBarHTML(alloc)}</div>
-    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
-      <span class="mono fw700 white" style="font-size:24px">${fmt(r.totalValue)}</span>
-      <span class="mono fw600 ${pos ? 'green' : 'red'}" style="font-size:14px">${fmtDelta(r.gain)} (${fmtPct(r.pctReturn)})</span>
-    </div>
-  `;
+function toggleStock(t){
+  const idx=activeStocks.indexOf(t);
+  if(idx>=0){activeStocks.splice(idx,1);delete alloc[t];}
+  else{activeStocks.push(t);alloc[t]=0;}
+  activePreset=null; renderAll();
 }
-
-function renderResultsTable() {
-  const r = computeScenario(alloc, scenarioType);
-  let html = "";
-  STOCKS.forEach(s => {
-    const d = r.details[s];
-    const pl = d.endValue - d.invested;
-    html += `<tr>
-      <td class="text-left mono fw700" style="color:${COLORS[s]}">${s}</td>
-      <td class="text-right mono dim">${(d.weight * 100).toFixed(1)}%</td>
-      <td class="text-right mono dim">${fmt(d.invested)}</td>
-      <td class="text-right mono ${d.ret >= 0 ? 'green' : 'red'}">${fmtPct(d.ret)}</td>
-      <td class="text-right mono white fw600">${fmt(d.endValue)}</td>
-      <td class="text-right mono fw600 ${pl >= 0 ? 'green' : 'red'}">${fmtDelta(pl)}</td>
-    </tr>`;
-  });
-  html += `<tr style="border-top:2px solid rgba(255,255,255,0.15)">
-    <td class="text-left fw700 white">Total</td>
-    <td class="text-right mono dim">100%</td>
-    <td class="text-right mono dim">${fmt(TOTAL)}</td>
-    <td class="text-right mono fw700 ${r.gain >= 0 ? 'green' : 'red'}">${fmtPct(r.pctReturn)}</td>
-    <td class="text-right mono white fw700">${fmt(r.totalValue)}</td>
-    <td class="text-right mono fw700 ${r.gain >= 0 ? 'green' : 'red'}">${fmtDelta(r.gain)}</td>
-  </tr>`;
-  document.getElementById("results-tbody").innerHTML = html;
+function toggleSection(id){
+  sectionsOpen[id]=!sectionsOpen[id];
+  document.getElementById("section-"+id).classList.toggle("hidden",!sectionsOpen[id]);
+  document.getElementById("chevron-"+id).classList.toggle("open",sectionsOpen[id]);
 }
-
-function renderAssumptions() {
-  document.getElementById("assumptions-grid").innerHTML = STOCKS.map(s => `
-    <div class="text-center">
-      <div class="mono fw700" style="font-size:12px;color:${COLORS[s]};margin-bottom:4px">${s}</div>
-      <div class="red" style="font-size:11px">${fmtPct(RETURN_ASSUMPTIONS[s].bear)}</div>
-      <div class="yellow" style="font-size:11px">${fmtPct(RETURN_ASSUMPTIONS[s].base)}</div>
-      <div class="green" style="font-size:11px">${fmtPct(RETURN_ASSUMPTIONS[s].bull)}</div>
-    </div>
-  `).join("");
-}
-
-function renderCompareView() {
-  // Chips
-  document.getElementById("saved-chips").innerHTML = savedScenarios.map((sc, i) =>
-    `<div class="scenario-chip">
-      <span style="color:#E2E8F0">${sc.label}</span>
-      ${i > 0 ? `<button class="chip-remove" onclick="removeScenario(${i})">×</button>` : ''}
-    </div>`
+function renderPresets(){
+  document.getElementById("preset-buttons").innerHTML=Object.entries(PRESETS).map(([k,v])=>
+    '<button class="btn '+(activePreset===k?'active':'')+'" onclick="applyPreset(\''+k+'\')">'+v.label+'</button>'
   ).join("");
-
-  // Comparison grid
-  const types = ["bear", "base", "bull"];
-  let html = `<div class="compare-grid" style="grid-template-columns: 160px repeat(3, 1fr)">`;
-  html += `<div class="compare-cell"></div>`;
-  types.forEach(t => {
-    html += `<div class="compare-header" style="border-bottom:2px solid ${SCENARIO_COLORS[t]};color:${SCENARIO_COLORS[t]}">${SCENARIO_LABELS[t]} Case</div>`;
+}
+function renderSliders(){
+  const el=document.getElementById("sliders-container");
+  el.innerHTML=activeStocks.map(s=>{
+    const info=ALL_STOCKS[s]; const val=alloc[s]||0;
+    return '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'+
+      '<div style="display:flex;align-items:center;gap:6px"><span class="mono fw700" style="font-size:12px;color:'+info.color+'">'+s+'</span>'+
+      '<span style="font-size:10px;color:#4A5568">'+info.name+'</span></div>'+
+      '<span class="mono" style="font-size:12px;color:#718096" id="slider-val-'+s+'">'+val.toFixed(1)+'%</span></div>'+
+      '<input type="range" min="0" max="100" step="0.5" value="'+val+'" style="--thumb-color:'+info.color+';accent-color:'+info.color+'" oninput="updateAlloc(\''+s+'\',this.value)"></div>';
+  }).join(""); updateTotalBar();
+}
+function updateTotalBar(){
+  const total=getAllocTotal(); const isValid=Math.abs(total-100)<0.5;
+  const bar=document.getElementById("total-bar");
+  bar.className="total-bar "+(isValid?"valid":"invalid");
+  const color=isValid?"#48BB78":"#F56565";
+  document.getElementById("total-label").style.color=color;
+  document.getElementById("total-label").textContent="Total ("+activeStocks.length+" stocks)";
+  document.getElementById("total-value").style.color=color;
+  document.getElementById("total-value").textContent=total.toFixed(1)+"%";
+}
+function renderScenarioToggle(){
+  document.getElementById("scenario-toggle").innerHTML=["bear","base","bull"].map(s=>{
+    const active=scenarioType===s; const c=SCENARIO_COLORS[s];
+    return '<button class="btn-scenario" style="border-color:'+(active?c:'rgba(255,255,255,0.06)')+';background:'+(active?c+'12':'rgba(255,255,255,0.02)')+';color:'+(active?c:'#4A5568')+';" onclick="setScenario(\''+s+'\')">'+SCENARIO_LABELS[s]+'</button>';
+  }).join("");
+}
+function renderSummaryCard(){
+  const r=computeScenario(alloc,activeStocks,scenarioType); const pos=r.gain>=0;
+  document.getElementById("summary-card").innerHTML=
+    '<div style="margin-bottom:10px">'+miniBarHTML(alloc,activeStocks)+'</div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">'+
+    '<span class="mono fw700 white" style="font-size:22px">'+fmt(r.totalValue)+'</span>'+
+    '<span class="mono fw600 '+(pos?'green':'red')+'" style="font-size:13px">'+fmtDelta(r.gain)+' ('+fmtPct(r.pctReturn)+')</span></div>';
+}
+function renderResultsTable(){
+  const r=computeScenario(alloc,activeStocks,scenarioType);
+  const sorted=[...activeStocks].sort((a,b)=>(alloc[b]||0)-(alloc[a]||0));
+  let html="";
+  sorted.forEach(s=>{
+    const d=r.details[s]; const pl=d.endValue-d.invested; const info=ALL_STOCKS[s];
+    html+='<tr><td class="text-left"><span class="mono fw700" style="color:'+info.color+';font-size:11px">'+s+'</span></td>'+
+      '<td class="text-right mono dim" style="font-size:11px">'+(d.weight*100).toFixed(1)+'%</td>'+
+      '<td class="text-right mono dim" style="font-size:11px">'+fmt(d.invested)+'</td>'+
+      '<td class="text-right mono '+(d.ret>=0?'green':'red')+'" style="font-size:11px">'+fmtPct(d.ret)+'</td>'+
+      '<td class="text-right mono white fw600" style="font-size:11px">'+fmt(d.endValue)+'</td>'+
+      '<td class="text-right mono fw600 '+(pl>=0?'green':'red')+'" style="font-size:11px">'+fmtDelta(pl)+'</td></tr>';
   });
-  savedScenarios.forEach(sc => {
-    html += `<div class="compare-cell" style="display:flex;align-items:center;font-weight:600;color:#E2E8F0;font-size:13px">${sc.label}</div>`;
-    types.forEach(t => {
-      const r = computeScenario(sc.alloc, t);
-      html += `<div class="compare-cell text-center" style="border-left:1px solid rgba(255,255,255,0.04)">
-        <div class="mono fw700 white" style="font-size:15px">${fmt(r.totalValue)}</div>
-        <div class="mono ${r.gain >= 0 ? 'green' : 'red'}" style="font-size:12px;margin-top:2px">${fmtDelta(r.gain)}</div>
-      </div>`;
+  html+='<tr style="border-top:2px solid rgba(255,255,255,0.1)"><td class="text-left fw700 white" style="font-size:12px">Total</td>'+
+    '<td class="text-right mono dim" style="font-size:11px">'+getAllocTotal().toFixed(1)+'%</td>'+
+    '<td class="text-right mono dim" style="font-size:11px">'+fmt(TOTAL)+'</td>'+
+    '<td class="text-right mono fw700 '+(r.gain>=0?'green':'red')+'" style="font-size:11px">'+fmtPct(r.pctReturn)+'</td>'+
+    '<td class="text-right mono white fw700" style="font-size:11px">'+fmt(r.totalValue)+'</td>'+
+    '<td class="text-right mono fw700 '+(r.gain>=0?'green':'red')+'" style="font-size:11px">'+fmtDelta(r.gain)+'</td></tr>';
+  document.getElementById("results-tbody").innerHTML=html;
+}
+function renderAssumptions(){
+  const cols=Math.min(activeStocks.length,6);
+  const el=document.getElementById("assumptions-grid");
+  el.style.gridTemplateColumns="repeat("+cols+", 1fr)";
+  el.innerHTML=activeStocks.map(s=>{
+    const info=ALL_STOCKS[s];
+    return '<div class="text-center" style="padding:4px"><div class="mono fw700" style="font-size:11px;color:'+info.color+';margin-bottom:3px">'+s+'</div>'+
+      '<div class="red" style="font-size:10px">'+fmtPct(info.bear)+'</div>'+
+      '<div class="yellow" style="font-size:10px">'+fmtPct(info.base)+'</div>'+
+      '<div class="green" style="font-size:10px">'+fmtPct(info.bull)+'</div></div>';
+  }).join("");
+}
+function renderCompareView(){
+  document.getElementById("saved-chips").innerHTML=savedScenarios.map((sc,i)=>
+    '<div class="scenario-chip"><span style="color:#E2E8F0;font-size:12px">'+sc.label+'</span>'+
+    '<span class="muted" style="font-size:10px">'+sc.stocks.length+' stocks</span>'+
+    (i>0?'<button class="chip-remove" onclick="removeScenario('+i+')">×</button>':'')+'</div>'
+  ).join("");
+  const types=["bear","base","bull"];
+  let html='<div class="compare-grid" style="grid-template-columns:160px repeat(3,1fr)"><div class="compare-cell"></div>';
+  types.forEach(t=>{html+='<div class="compare-header" style="border-bottom:2px solid '+SCENARIO_COLORS[t]+';color:'+SCENARIO_COLORS[t]+'">'+SCENARIO_LABELS[t]+' Case</div>';});
+  savedScenarios.forEach(sc=>{
+    html+='<div class="compare-cell" style="display:flex;align-items:center;font-weight:600;color:#E2E8F0;font-size:12px">'+sc.label+'</div>';
+    types.forEach(t=>{
+      const r=computeScenario(sc.alloc,sc.stocks,t);
+      html+='<div class="compare-cell text-center" style="border-left:1px solid rgba(255,255,255,0.03)">'+
+        '<div class="mono fw700 white" style="font-size:14px">'+fmt(r.totalValue)+'</div>'+
+        '<div class="mono '+(r.gain>=0?'green':'red')+'" style="font-size:11px;margin-top:2px">'+fmtDelta(r.gain)+'</div></div>';
     });
   });
-  html += `</div>`;
-  document.getElementById("comparison-grid").innerHTML = html;
-
-  // Risk bars
-  const maxVol = 0.5;
-  document.getElementById("risk-bars").innerHTML = savedScenarios.map(sc => {
-    const baseR = computeScenario(sc.alloc, "base");
-    const bearR = computeScenario(sc.alloc, "bear");
-    const volPct = baseR.portfolioVol;
-    const volWidth = (volPct / maxVol) * 100;
-    const gradient = volPct > 0.3
-      ? "linear-gradient(90deg, #ECC94B, #F56565)"
-      : "linear-gradient(90deg, #48BB78, #ECC94B)";
-    return `<div class="risk-row">
-      <span class="risk-label">${sc.label}</span>
-      <div style="flex:1">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <span style="font-size:10px;color:#718096;width:60px">Volatility</span>
-          <div class="risk-bar-bg"><div class="risk-bar-fill" style="width:${volWidth}%;background:${gradient}"></div></div>
-          <span class="mono muted" style="font-size:12px;width:50px;text-align:right">${(volPct * 100).toFixed(1)}%</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:10px;color:#718096;width:60px">Bear loss</span>
-          <span class="mono red" style="font-size:12px">${fmt(bearR.gain)}</span>
-        </div>
-      </div>
-    </div>`;
+  html+='</div>';
+  document.getElementById("comparison-grid").innerHTML=html;
+  const maxVol=0.6;
+  document.getElementById("risk-bars").innerHTML=savedScenarios.map(sc=>{
+    const baseR=computeScenario(sc.alloc,sc.stocks,"base");
+    const bearR=computeScenario(sc.alloc,sc.stocks,"bear");
+    const volPct=baseR.portfolioVol; const volWidth=Math.min((volPct/maxVol)*100,100);
+    const gradient=volPct>0.3?"linear-gradient(90deg,#ECC94B,#F56565)":"linear-gradient(90deg,#48BB78,#ECC94B)";
+    return '<div class="risk-row"><span class="risk-label">'+sc.label+'</span><div style="flex:1">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+
+      '<span style="font-size:9px;color:#4A5568;width:55px">Volatility</span>'+
+      '<div class="risk-bar-bg"><div class="risk-bar-fill" style="width:'+volWidth+'%;background:'+gradient+'"></div></div>'+
+      '<span class="mono muted" style="font-size:11px;width:44px;text-align:right">'+(volPct*100).toFixed(1)+'%</span></div>'+
+      '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:9px;color:#4A5568;width:55px">Bear loss</span>'+
+      '<span class="mono red" style="font-size:11px">'+fmt(bearR.gain)+'</span></div></div></div>';
   }).join("");
 }
-
-// Actions
-function applyPreset(key) {
-  activePreset = key;
-  alloc = { ...PRESETS[key].alloc };
+function applyPreset(key){
+  activePreset=key; const preset=PRESETS[key];
+  alloc={...preset.alloc};
+  activeStocks=Object.keys(alloc).filter(s=>alloc[s]>0);
   renderAll();
 }
-
-function updateAlloc(stock, value) {
-  alloc[stock] = parseFloat(value);
-  activePreset = null;
-  document.getElementById(`slider-val-${stock}`).textContent = alloc[stock].toFixed(1) + "%";
-  updateTotalBar();
-  renderPresets();
-  renderSummaryCard();
-  renderResultsTable();
+function updateAlloc(stock,value){
+  alloc[stock]=parseFloat(value); activePreset=null;
+  document.getElementById("slider-val-"+stock).textContent=alloc[stock].toFixed(1)+"%";
+  updateTotalBar(); renderPresets(); renderSummaryCard(); renderResultsTable();
 }
-
-function setScenario(type) {
-  scenarioType = type;
-  renderScenarioToggle();
-  renderSummaryCard();
-  renderResultsTable();
+function setScenario(type){ scenarioType=type; renderScenarioToggle(); renderSummaryCard(); renderResultsTable(); }
+function switchView(view){
+  currentView=view;
+  document.getElementById("view-single").classList.toggle("hidden",view!=="single");
+  document.getElementById("view-compare").classList.toggle("hidden",view!=="compare");
+  document.getElementById("tab-single").classList.toggle("active",view==="single");
+  document.getElementById("tab-compare").classList.toggle("active",view==="compare");
+  if(view==="compare") renderCompareView();
 }
-
-function switchView(view) {
-  currentView = view;
-  document.getElementById("view-single").classList.toggle("hidden", view !== "single");
-  document.getElementById("view-compare").classList.toggle("hidden", view !== "compare");
-  document.getElementById("tab-single").classList.toggle("active", view === "single");
-  document.getElementById("tab-compare").classList.toggle("active", view === "compare");
-  if (view === "compare") renderCompareView();
+function saveScenario(){
+  const input=document.getElementById("scenario-name-input");
+  const label=input.value.trim()||("Scenario "+savedScenarios.length);
+  savedScenarios.push({label,alloc:{...alloc},stocks:[...activeStocks]});
+  input.value=""; if(currentView==="compare") renderCompareView();
 }
-
-function saveScenario() {
-  const input = document.getElementById("scenario-name-input");
-  const label = input.value.trim() || `Scenario ${savedScenarios.length + 1}`;
-  savedScenarios.push({ label, alloc: { ...alloc } });
-  input.value = "";
-  if (currentView === "compare") renderCompareView();
+function removeScenario(idx){ savedScenarios.splice(idx,1); renderCompareView(); }
+function equalizeAllocations(){
+  if(!activeStocks.length) return;
+  const each=parseFloat((100/activeStocks.length).toFixed(1));
+  activeStocks.forEach(s=>{alloc[s]=each;});
+  const diff=100-activeStocks.reduce((sum,s)=>sum+alloc[s],0);
+  alloc[activeStocks[0]]=parseFloat((alloc[activeStocks[0]]+diff).toFixed(1));
+  activePreset=null; renderAll();
 }
-
-function removeScenario(idx) {
-  savedScenarios.splice(idx, 1);
-  renderCompareView();
+function resetToCurrentAlloc(){
+  activeStocks=[...OWNED_STOCKS]; alloc={...CURRENT_ALLOC}; activePreset="current"; renderAll();
 }
-
-function renderAll() {
-  document.getElementById("total-display").textContent = fmt(TOTAL);
-  renderPresets();
-  renderSliders();
-  renderScenarioToggle();
-  renderSummaryCard();
-  renderResultsTable();
-  renderAssumptions();
+function renderAll(){
+  document.getElementById("total-display").textContent=fmt(TOTAL);
+  renderStockPicker(); renderPresets(); renderSliders();
+  renderScenarioToggle(); renderSummaryCard(); renderResultsTable(); renderAssumptions();
 }
-
-// Init
 renderAll();
 </script>
-
 </body>
 </html>
